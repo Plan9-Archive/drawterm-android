@@ -1,3 +1,3 @@
-/home/eli/AndroidStudioProjects/Drawterm/app/.externalNativeBuild/cmake/release/x86_64/CMakeFiles/rebuild_cache.dir
-/home/eli/AndroidStudioProjects/Drawterm/app/.externalNativeBuild/cmake/release/x86_64/CMakeFiles/edit_cache.dir
-/home/eli/AndroidStudioProjects/Drawterm/app/.externalNativeBuild/cmake/release/x86_64/CMakeFiles/native-lib.dir
+/home/eli/drawterm-android/app/.externalNativeBuild/cmake/release/x86_64/CMakeFiles/rebuild_cache.dir
+/home/eli/drawterm-android/app/.externalNativeBuild/cmake/release/x86_64/CMakeFiles/edit_cache.dir
+/home/eli/drawterm-android/app/.externalNativeBuild/cmake/release/x86_64/CMakeFiles/native-lib.dir

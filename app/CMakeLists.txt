@@ -16,6 +16,7 @@ add_library(native-lib SHARED
                         src/main/cpp/native-lib.c
                         src/main/cpp/gui-android/android.c
                         src/main/cpp/dtmain.c
+                        src/main/cpp/flushimage.c
 
                         src/main/drawterm/cpu.c
                         src/main/drawterm/aan.c
