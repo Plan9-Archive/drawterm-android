@@ -7,13 +7,10 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="org.echoline.drawterm.MainActivity"
     tools:showIn="@layout/activity_main">
-
-    <TableLayout
+    <LinearLayout
+        android:id="@+id/servers"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-    </TableLayout>
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+    </LinearLayout>
 </android.support.constraint.ConstraintLayout>

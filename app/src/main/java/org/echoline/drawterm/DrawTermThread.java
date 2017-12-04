@@ -27,6 +27,7 @@ public class DrawTermThread extends Thread {
             @Override
             public void run() {
                 m.setContentView(R.layout.server_main);
+                m.populateServers(m);
             }
         });
     }

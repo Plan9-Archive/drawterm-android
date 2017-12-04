@@ -39,9 +39,13 @@ public class MySurfaceView extends SurfaceView {
                 CheckBox left = (CheckBox)mainActivity.findViewById(R.id.mouseLeft);
                 CheckBox middle = (CheckBox)mainActivity.findViewById(R.id.mouseMiddle);
                 CheckBox right = (CheckBox)mainActivity.findViewById(R.id.mouseRight);
+                CheckBox up = (CheckBox)mainActivity.findViewById(R.id.mouseUp);
+                CheckBox down = (CheckBox)mainActivity.findViewById(R.id.mouseDown);
                 int buttons = (left.isChecked()? 1: 0) |
                                 (middle.isChecked()? 2: 0) |
-                                (right.isChecked()? 4: 0);
+                                (right.isChecked()? 4: 0) |
+                                (up.isChecked()? 8: 0) |
+                                (down.isChecked()? 16: 0);
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     mouse[0] = Math.round(event.getX());
                     mouse[1] = Math.round(event.getY());

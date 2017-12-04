@@ -28,6 +28,14 @@
             android:id="@+id/mouseRight"
             android:layout_width="wrap_content"
             android:layout_height="match_parent" />
+        <CheckBox
+            android:id="@+id/mouseUp"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
+        <CheckBox
+            android:id="@+id/mouseDown"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
     </LinearLayout>
 
 </LinearLayout>

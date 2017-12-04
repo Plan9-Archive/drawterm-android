@@ -1,11 +1,14 @@
 package org.echoline.drawterm;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.support.v4.util.ArraySet;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Menu;
@@ -14,6 +17,15 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
     // Used to load the 'native-lib' library on application startup.
@@ -21,46 +33,92 @@ public class MainActivity extends AppCompatActivity {
         System.loadLibrary("native-lib");
     }
 
+    public void populateServers(Context context) {
+        LinearLayout ll = findViewById(R.id.servers);
+        SharedPreferences settings = getSharedPreferences("DrawtermPrefs", 0);
+        final Map<String, String> map = (Map<String, String>)settings.getAll();
+        Object []keys = map.keySet().toArray();
+        for (int i = 0; i < keys.length; i++) {
+            final String key = (String)keys[i];
+            TextView tv = new TextView(context);
+            tv.setHeight(40);
+            tv.setText(key);
+            tv.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    setContentView(R.layout.server_main);
+                    serverButtons();
+
+                    String s = map.get(key);
+                    String []a = s.split("\007");
+
+                    ((EditText)MainActivity.this.findViewById(R.id.cpuServer)).setText((String)a[0]);
+                    ((EditText)MainActivity.this.findViewById(R.id.authServer)).setText((String)a[1]);
+                    ((EditText)MainActivity.this.findViewById(R.id.userName)).setText((String)a[2]);
+                    ((EditText)MainActivity.this.findViewById(R.id.passWord)).setText((String)a[3]);
+                }
+            });
+            ll.addView(tv);
+        }
+    }
+
+    public void serverButtons() {
+        Button button = (Button)findViewById(R.id.save);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String cpu = ((EditText)MainActivity.this.findViewById(R.id.cpuServer)).getText().toString();
+                String auth = ((EditText)MainActivity.this.findViewById(R.id.authServer)).getText().toString();
+                String user = ((EditText)MainActivity.this.findViewById(R.id.userName)).getText().toString();
+                String pass = ((EditText)MainActivity.this.findViewById(R.id.passWord)).getText().toString();
+
+                SharedPreferences settings = getSharedPreferences("DrawtermPrefs", 0);
+                SharedPreferences.Editor editor = settings.edit();
+                editor.putString(user + "@" + cpu + "/"  + auth, cpu + "\007" + auth + "\007" + user + "\007" + pass);
+                editor.commit();
+            }
+        });
+
+        button = (Button) findViewById(R.id.connect);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View view) {
+                String cpu = ((EditText)MainActivity.this.findViewById(R.id.cpuServer)).getText().toString();
+                String auth = ((EditText)MainActivity.this.findViewById(R.id.authServer)).getText().toString();
+                String user = ((EditText)MainActivity.this.findViewById(R.id.userName)).getText().toString();
+                String pass = ((EditText)MainActivity.this.findViewById(R.id.passWord)).getText().toString();
+                int w = MainActivity.this.getWindow().getDecorView().getWidth();
+                int h = MainActivity.this.getWindow().getDecorView().getHeight() - 30;
+
+                setContentView(R.layout.drawterm_main);
+                MySurfaceView mView = new MySurfaceView(MainActivity.this, w, h);
+                LinearLayout l = MainActivity.this.findViewById(R.id.dlayout);
+                l.addView(mView, 1, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+
+                DrawTermThread t = new DrawTermThread(cpu, auth, user, pass, MainActivity.this);
+                t.start();
+            }
+        });
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-       /* setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        setContentView(R.layout.activity_main);
+        populateServers(this);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {*/
+            public void onClick(View v) {
                 setContentView(R.layout.server_main);
-
-                Button button = (Button) findViewById(R.id.connect);
-                button.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(final View view) {
-                        String cpu = ((EditText)MainActivity.this.findViewById(R.id.cpuServer)).getText().toString();
-                        String auth = ((EditText)MainActivity.this.findViewById(R.id.authServer)).getText().toString();
-                        String user = ((EditText)MainActivity.this.findViewById(R.id.userName)).getText().toString();
-                        String pass = ((EditText)MainActivity.this.findViewById(R.id.passWord)).getText().toString();
-                        int w = MainActivity.this.getWindow().getDecorView().getWidth();
-                        int h = MainActivity.this.getWindow().getDecorView().getHeight() - 30;
-
-                        setContentView(R.layout.drawterm_main);
-                        MySurfaceView mView = new MySurfaceView(MainActivity.this, w, h);
-                        LinearLayout l = MainActivity.this.findViewById(R.id.dlayout);
-                        l.addView(mView, 1, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-
-                        DrawTermThread t = new DrawTermThread(cpu, auth, user, pass, MainActivity.this);
-                        t.start();
-                    }
-                });
+                serverButtons();
             }
-        /*});
-
-
-    }*/
+        });
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
