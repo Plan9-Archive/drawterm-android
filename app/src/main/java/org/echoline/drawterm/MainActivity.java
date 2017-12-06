@@ -4,11 +4,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.util.ArraySet;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Menu;
@@ -18,21 +15,13 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
     private Map<String, String> map;
-    private String key;
 
     // Used to load the 'native-lib' library on application startup.
     static {
@@ -43,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.server_main);
         serverButtons();
 
-        String s = map.get(key);
+        String s = map.get(((TextView)v).getText().toString());
         String []a = s.split("\007");
 
         ((EditText)MainActivity.this.findViewById(R.id.cpuServer)).setText((String)a[0]);
@@ -57,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
         ArrayAdapter<String> la = new ArrayAdapter<String>(MainActivity.this, R.layout.item_main);
         SharedPreferences settings = getSharedPreferences("DrawtermPrefs", 0);
         map = (Map<String, String>)settings.getAll();
+        String key;
         Object []keys = map.keySet().toArray();
         for (int i = 0; i < keys.length; i++) {
             key = (String)keys[i];
