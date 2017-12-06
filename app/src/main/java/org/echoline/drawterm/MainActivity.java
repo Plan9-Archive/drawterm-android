@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
 
                 SharedPreferences settings = getSharedPreferences("DrawtermPrefs", 0);
                 SharedPreferences.Editor editor = settings.edit();
-                editor.putString(user + "@" + cpu + "/"  + auth, cpu + "\007" + auth + "\007" + user + "\007" + pass);
+                editor.putString(user + "@" + cpu + " (auth="  + auth + ")", cpu + "\007" + auth + "\007" + user + "\007" + pass);
                 editor.commit();
             }
         });
