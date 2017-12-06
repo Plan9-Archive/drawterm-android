@@ -1,3 +1,0 @@
-/home/eli/drawterm-android/app/.externalNativeBuild/cmake/debug/arm64-v8a/CMakeFiles/rebuild_cache.dir
-/home/eli/drawterm-android/app/.externalNativeBuild/cmake/debug/arm64-v8a/CMakeFiles/edit_cache.dir
-/home/eli/drawterm-android/app/.externalNativeBuild/cmake/debug/arm64-v8a/CMakeFiles/native-lib.dir

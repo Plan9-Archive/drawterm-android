@@ -14,9 +14,12 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -28,38 +31,38 @@ import java.util.Map;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
+    private Map<String, String> map;
+    private String key;
+
     // Used to load the 'native-lib' library on application startup.
     static {
         System.loadLibrary("native-lib");
     }
 
+    public void myFancyMethod(View v) {
+        setContentView(R.layout.server_main);
+        serverButtons();
+
+        String s = map.get(key);
+        String []a = s.split("\007");
+
+        ((EditText)MainActivity.this.findViewById(R.id.cpuServer)).setText((String)a[0]);
+        ((EditText)MainActivity.this.findViewById(R.id.authServer)).setText((String)a[1]);
+        ((EditText)MainActivity.this.findViewById(R.id.userName)).setText((String)a[2]);
+        ((EditText)MainActivity.this.findViewById(R.id.passWord)).setText((String)a[3]);
+    }
+
     public void populateServers(Context context) {
-        LinearLayout ll = findViewById(R.id.servers);
+        ListView ll = findViewById(R.id.servers);
+        ArrayAdapter<String> la = new ArrayAdapter<String>(MainActivity.this, R.layout.item_main);
         SharedPreferences settings = getSharedPreferences("DrawtermPrefs", 0);
-        final Map<String, String> map = (Map<String, String>)settings.getAll();
+        map = (Map<String, String>)settings.getAll();
         Object []keys = map.keySet().toArray();
         for (int i = 0; i < keys.length; i++) {
-            final String key = (String)keys[i];
-            TextView tv = new TextView(context);
-            tv.setHeight(40);
-            tv.setText(key);
-            tv.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    setContentView(R.layout.server_main);
-                    serverButtons();
-
-                    String s = map.get(key);
-                    String []a = s.split("\007");
-
-                    ((EditText)MainActivity.this.findViewById(R.id.cpuServer)).setText((String)a[0]);
-                    ((EditText)MainActivity.this.findViewById(R.id.authServer)).setText((String)a[1]);
-                    ((EditText)MainActivity.this.findViewById(R.id.userName)).setText((String)a[2]);
-                    ((EditText)MainActivity.this.findViewById(R.id.passWord)).setText((String)a[3]);
-                }
-            });
-            ll.addView(tv);
+            key = (String)keys[i];
+            la.add(key);
         }
+        ll.setAdapter(la);
     }
 
     public void serverButtons() {
