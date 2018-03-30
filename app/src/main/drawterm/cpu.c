@@ -23,6 +23,7 @@ static int	findkey(Authkey*, char*, char*, char*);
 
 static char	*host;
 static int	aanfilter;
+static int	aanto = 3600 * 24;
 static int	norcpu;
 static int	nokbd;
 static int	nogfx;
@@ -84,14 +85,14 @@ startaan(char *host, int fd)
 "		echo -n 'announce *!0' >[1=3]\n"
 "		echo `{cat $netdir/local} || exit\n"
 "		bind '#|' /mnt/aan || exit\n"
-"		exec aan $netdir <>/mnt/aan/data1 >[1=0] >[2]/dev/null &\n"
+"		exec aan -m $aanto $netdir <>/mnt/aan/data1 >[1=0] >[2]/dev/null &\n"
 "	}\n"
 "}\n"
 "<>/mnt/aan/data >[1=0] >[2]/dev/null {\n"
 "	rfork n\n"
 "	fn server {\n"
 "		echo -n aanserver $netdir >/proc/$pid/args\n"
-"		rm -f /env/^'fn#server'\n"
+"		rm -f /env/^('fn#server' aanto)\n"
 "		. <{n=`{read} && ! ~ $#n 0 && read -c $n} >[2=1]\n"
 "	}\n"
 "	exec tlssrv -A /bin/rc -c server\n"
@@ -100,7 +101,8 @@ startaan(char *host, int fd)
 	char buf[128], *p, *na;
 	int n;
 
-	if(fprint(fd, "%7ld\n%s", strlen(script), script) < 0)
+	snprint(buf, sizeof buf, "aanto=%d\n", aanto);
+	if(fprint(fd, "%7ld\n%s%s", strlen(buf)+strlen(script), buf, script) < 0)
 		sysfatal("sending aan script: %r");
 	n = read(fd, buf, sizeof(buf)-1);
 	close(fd);
@@ -113,7 +115,7 @@ startaan(char *host, int fd)
 	else
 		na = strdup(buf);
 
-	return aanclient(na);
+	return aanclient(na, aanto);
 }
 
 void
@@ -225,9 +227,10 @@ ncpu(char *host, char *cmd)
 void
 usage(void)
 {
-	fprint(2, "usage: %s [-GBOp] "
+	fprint(2, "usage: %s [-GBO] "
 		"[-h host] [-u user] [-a authserver] [-s secstore] "
 		"[-e 'crypt hash'] [-k keypattern] "
+		"[-p] [-t timeout] "
 		"[-r root] [-c cmd ...]\n", argv0);
 	exits("usage");
 }
@@ -254,6 +257,9 @@ cpumain(int argc, char **argv)
 		break;
 	case 'p':
 		aanfilter = 1;
+		break;
+	case 't':
+		aanto = (int)strtol(EARGF(usage()), nil, 0);
 		break;
 	case 'h':
 		host = EARGF(usage());
@@ -789,33 +795,6 @@ again:		if(!getkey(&authkey, user, tr.authdom, proto, pass))
 }
 
 static int
-unhex(char c)
-{
-	if('0' <= c && c <= '9')
-		return c-'0';
-	if('a' <= c && c <= 'f')
-		return c-'a'+10;
-	if('A' <= c && c <= 'F')
-		return c-'A'+10;
-	abort();
-	return -1;
-}
-
-static int
-hexparse(char *hex, uchar *dat, int ndat)
-{
-	int i;
-
-	if(strlen(hex) != 2*ndat)
-		return -1;
-	if(hex[strspn(hex, "0123456789abcdefABCDEF")] != '\0')
-		return -1;
-	for(i=0; i<ndat; i++)
-		dat[i] = (unhex(hex[2*i])<<4)|unhex(hex[2*i+1]);
-	return 0;
-}
-
-static int
 findkey(Authkey *key, char *user, char *dom, char *proto)
 {
 	char buf[1024], *f[50], *p, *ep, *nextp, *hex, *pass, *id, *role;
@@ -865,10 +844,10 @@ findkey(Authkey *key, char *user, char *dom, char *proto)
 		if(hex != nil){
 			memset(key, 0, sizeof(*key));
 			if(strcmp(proto, "dp9ik") == 0) {
-				if(hexparse(hex, key->aes, AESKEYLEN) != 0)
+				if(dec16(key->aes, AESKEYLEN, hex, strlen(hex)) != AESKEYLEN)
 					continue;
 			} else {
-				if(hexparse(hex, (uchar*)key->des, DESKEYLEN) != 0)
+				if(dec16((uchar*)key->des, DESKEYLEN, hex, strlen(hex)) != DESKEYLEN)
 					continue;
 			}
 		} else {

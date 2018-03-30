@@ -1,6 +1,8 @@
 package org.echoline.drawterm;
 
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -21,14 +23,20 @@ public class MySurfaceView extends SurfaceView {
     private Bitmap bmp;
     private int screenWidth, screenHeight;
     private MainActivity mainActivity;
+    private float ws, hs;
+    private Paint paint = new Paint();
 
-    public MySurfaceView(Context context, int w, int h) {
+    public MySurfaceView(Context context, int w, int h, float ws, float hs) {
         super(context);
         screenHeight = h;
         screenWidth = w;
+        this.ws = ws;
+        this.hs = hs;
         mainActivity = (MainActivity)context;
         mainActivity.setWidth(screenWidth);
         mainActivity.setHeight(screenHeight);
+        mainActivity.setWidthScale(ws);
+        mainActivity.setHeightScale(hs);
         setWillNotDraw(false);
 
         setOnTouchListener(new View.OnTouchListener() {
@@ -68,27 +76,47 @@ public class MySurfaceView extends SurfaceView {
         bmp = Bitmap.createBitmap(screenWidth, screenHeight, Bitmap.Config.ARGB_8888);
         new Thread(new Runnable() {
             private long last = 0;
+            private long lastcb = 0;
             private long ms = 15;
 
             @Override
             public void run() {
-                while (true) {
-                    try {
-                        if ((SystemClock.currentThreadTimeMillis() - last) > ms) {
-                            mainActivity.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    MySurfaceView.this.invalidate();
-                                }
-                            });
-                            last = SystemClock.currentThreadTimeMillis();
+                try {
+                    while (true) {
+                        try {
+                            if ((SystemClock.currentThreadTimeMillis() - last) > ms) {
+                                mainActivity.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        MySurfaceView.this.invalidate();
+                                        if ((SystemClock.currentThreadTimeMillis() - lastcb) > 1000) {
+                                            String s = new String(mainActivity.getSnarf());
+                                            ClipboardManager cm = (ClipboardManager)mainActivity.getApplicationContext().getSystemService(Context.CLIPBOARD_SERVICE);
+                                            if (cm != null) {
+                                                String t = cm.getPrimaryClip().getItemAt(0).coerceToText(mainActivity.getApplicationContext()).toString();
+                                                if (!t.equals(s)) {
+                                                    ClipData cd = ClipData.newPlainText(null, s);
+                                                    cm.setPrimaryClip(cd);
+                                                }
+                                            }
+                                            lastcb = SystemClock.currentThreadTimeMillis();
+                                        }
+                                    }
+                                });
+                                last = SystemClock.currentThreadTimeMillis();
+                            }
+                            Thread.sleep(1);
+                        } catch (Exception e) {
+                            throw e;
                         }
-                        Thread.sleep(1);
-                    } catch (Exception e) {
                     }
+                } catch (Exception e) {
                 }
             }
         }).start();
+        ClipboardManager cm = (ClipboardManager)mainActivity.getApplicationContext().getSystemService(Context.CLIPBOARD_SERVICE);
+        if (cm != null)
+            cm.addPrimaryClipChangedListener(new Listener());
     }
 
     @Override
@@ -99,6 +127,17 @@ public class MySurfaceView extends SurfaceView {
         int []ints = new int[intBuffer.remaining()];
         intBuffer.get(ints);
         bmp.setPixels(ints, 0, screenWidth, 0, 0, screenWidth, screenHeight);
-        canvas.drawBitmap(bmp, 0, 0, new Paint());
+        canvas.save();
+        canvas.scale(ws, hs);
+        canvas.drawBitmap(bmp, 0, 0, paint);
+        canvas.restore();
+    }
+
+    protected class Listener implements ClipboardManager.OnPrimaryClipChangedListener {
+        public void onPrimaryClipChanged() {
+            ClipboardManager cm = (ClipboardManager)mainActivity.getApplicationContext().getSystemService(Context.CLIPBOARD_SERVICE);
+            if (cm != null)
+                mainActivity.setSnarf((String)(cm.getPrimaryClip().getItemAt(0).coerceToText(mainActivity.getApplicationContext()).toString()));
+        }
     }
 }

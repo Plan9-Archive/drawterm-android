@@ -2,7 +2,7 @@
 #include <u.h>
 #include <libc.h>
 #include <draw.h>
-#include <memdraw.h>
+#include <string.h>
 
 void absmousetrack(int, int, int, ulong);
 ulong ticks(void);
@@ -12,6 +12,9 @@ int screenHeight = 1232;
 Point mousept = {0, 0};
 int buttons = 0;
 unsigned char* screenData();
+float ws = 1;
+float hs = 1;
+extern char *snarfbuf;
 
 JNIEXPORT void JNICALL
 Java_org_echoline_drawterm_MainActivity_setPass(
@@ -37,6 +40,22 @@ Java_org_echoline_drawterm_MainActivity_setHeight(
     screenHeight = height;
 }
 
+JNIEXPORT void JNICALL
+Java_org_echoline_drawterm_MainActivity_setWidthScale(
+        JNIEnv *env,
+        jobject obj,
+        jfloat s) {
+    ws = s;
+}
+
+JNIEXPORT void JNICALL
+Java_org_echoline_drawterm_MainActivity_setHeightScale(
+        JNIEnv *env,
+        jobject obj,
+        jfloat s) {
+    hs = s;
+}
+
 JNIEXPORT jbyteArray JNICALL
 Java_org_echoline_drawterm_MainActivity_getScreenData(
         JNIEnv *env,
@@ -53,13 +72,13 @@ Java_org_echoline_drawterm_MainActivity_dtmain(
         jobjectArray argv) {
     int i, ret;
     jboolean isCopy;
-    char **args = (char **) malloc((*env)->GetArrayLength(env, argv) * sizeof(char *));
+    char **args = (char **) malloc(((*env)->GetArrayLength(env, argv)+1) * sizeof(char *));
 
     for (i = 0; i < (*env)->GetArrayLength(env, argv); i++) {
         jobject str = (jobject) (*env)->GetObjectArrayElement(env, argv, i);
         args[i] = strdup((char*)(*env)->GetStringUTFChars(env, (jstring)str, 0));
     }
-    args[i] = NULL;
+    args[(*env)->GetArrayLength(env, argv)] = NULL;
 
     ret = dt_main(i, args);
 
@@ -81,9 +100,32 @@ Java_org_echoline_drawterm_MainActivity_setMouse(
     if ((*env)->GetArrayLength(env, args) < 3)
         return;
     data = (*env)->GetIntArrayElements(env, args, &isCopy);
-    mousept.x = data[0];
-    mousept.y = data[1];
+    mousept.x = (int)(data[0] / ws);
+    mousept.y = (int)(data[1] / hs);
     buttons = data[2];
     (*env)->ReleaseIntArrayElements(env, args, data, 0);
     absmousetrack(mousept.x, mousept.y, buttons, ticks());
+}
+
+JNIEXPORT jstring JNICALL
+Java_org_echoline_drawterm_MainActivity_getSnarf(
+        JNIEnv *env,
+        jobject obj) {
+    jstring ret = NULL;
+    if (snarfbuf != NULL) {
+        ret = (*env)->NewStringUTF(env, snarfbuf);
+    } else {
+        ret = (*env)->NewStringUTF(env, "");
+    }
+    return ret;
+}
+
+JNIEXPORT void JNICALL
+Java_org_echoline_drawterm_MainActivity_setSnarf(
+        JNIEnv *env,
+        jobject obj,
+        jstring str) {
+    if (snarfbuf != NULL)
+        free(snarfbuf);
+    snarfbuf = strdup((*env)->GetStringUTFChars(env, str, 0));
 }

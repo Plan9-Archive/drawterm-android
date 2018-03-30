@@ -6,6 +6,7 @@ import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Menu;
@@ -80,11 +81,17 @@ public class MainActivity extends AppCompatActivity {
                 String auth = ((EditText)MainActivity.this.findViewById(R.id.authServer)).getText().toString();
                 String user = ((EditText)MainActivity.this.findViewById(R.id.userName)).getText().toString();
                 String pass = ((EditText)MainActivity.this.findViewById(R.id.passWord)).getText().toString();
-                int w = MainActivity.this.getWindow().getDecorView().getWidth();
-                int h = MainActivity.this.getWindow().getDecorView().getHeight() - 30;
+                int wp = MainActivity.this.getWindow().getDecorView().getWidth();
+                int hp = MainActivity.this.getWindow().getDecorView().getHeight();
+                DisplayMetrics dm = new DisplayMetrics();
+                getWindowManager().getDefaultDisplay().getMetrics(dm);
+                int w = (int)((wp/dm.xdpi) * 25.4 * 8);
+                int h = (int)((hp/dm.ydpi) * 25.4 * 8);
+                float ws = (float)wp/w;
+                float hs = (float)hp/h;
 
                 setContentView(R.layout.drawterm_main);
-                MySurfaceView mView = new MySurfaceView(MainActivity.this, w, h);
+                MySurfaceView mView = new MySurfaceView(MainActivity.this, w, h, ws, hs);
                 LinearLayout l = MainActivity.this.findViewById(R.id.dlayout);
                 l.addView(mView, 1, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
 
@@ -148,6 +155,10 @@ public class MainActivity extends AppCompatActivity {
     public native void setPass(String arg);
     public native void setWidth(int arg);
     public native void setHeight(int arg);
+    public native void setWidthScale(float arg);
+    public native void setHeightScale(float arg);
     public native byte[] getScreenData();
     public native void setMouse(int[] args);
+    public native String getSnarf();
+    public native void setSnarf(String str);
 }
