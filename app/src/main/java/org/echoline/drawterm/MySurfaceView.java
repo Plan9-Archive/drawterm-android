@@ -14,6 +14,7 @@ import android.widget.CheckBox;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.security.spec.ECField;
 
 /**
  * Created by eli on 12/3/17.
@@ -87,30 +88,33 @@ public class MySurfaceView extends SurfaceView {
             @Override
             public void run() {
                 while (true) {
-                    try {
-                        if ((SystemClock.currentThreadTimeMillis() - last) > ms) {
-                            mainActivity.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    MySurfaceView.this.invalidate();
-                                }
-                            });
-                            last = SystemClock.currentThreadTimeMillis();
-                        }
-                        if ((SystemClock.currentThreadTimeMillis() - lastcb) > 1000) {
-                            String s = mainActivity.getSnarf();
-                            ClipboardManager cm = (ClipboardManager)mainActivity.getApplicationContext().getSystemService(Context.CLIPBOARD_SERVICE);
-                            if (cm != null) {
-                                String t = cm.getPrimaryClip().getItemAt(0).coerceToText(mainActivity.getApplicationContext()).toString();
-                                if (!t.equals(s)) {
-                                    ClipData cd = ClipData.newPlainText(null, s);
-                                    cm.setPrimaryClip(cd);
-                                }
+                    if ((SystemClock.currentThreadTimeMillis() - last) > ms) {
+                        mainActivity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                MySurfaceView.this.invalidate();
                             }
-                            lastcb = SystemClock.currentThreadTimeMillis();
+                        });
+                        last = SystemClock.currentThreadTimeMillis();
+                    }
+                    if ((SystemClock.currentThreadTimeMillis() - lastcb) > 1000) {
+                        String s = mainActivity.getSnarf();
+                        ClipboardManager cm = (ClipboardManager)mainActivity.getApplicationContext().getSystemService(Context.CLIPBOARD_SERVICE);
+                        if (cm != null) {
+                            ClipData cd = cm.getPrimaryClip();
+                            String t = "";
+                            if (cd != null)
+                                t = cd.getItemAt(0).coerceToText(mainActivity.getApplicationContext()).toString();
+                            if (cd == null || !t.equals(s)) {
+                                cd = ClipData.newPlainText(null, s);
+                                cm.setPrimaryClip(cd);
+                            }
                         }
+                        lastcb = SystemClock.currentThreadTimeMillis();
+                    }
+                    try {
                         Thread.sleep(1);
-                    } catch (Exception e) {
+                    } catch(Exception e) {
                     }
                 }
             }
