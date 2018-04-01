@@ -3,14 +3,19 @@ package org.echoline.drawterm;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.content.res.Resources;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
+import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -81,16 +86,44 @@ public class MainActivity extends AppCompatActivity {
                 String auth = ((EditText)MainActivity.this.findViewById(R.id.authServer)).getText().toString();
                 String user = ((EditText)MainActivity.this.findViewById(R.id.userName)).getText().toString();
                 String pass = ((EditText)MainActivity.this.findViewById(R.id.passWord)).getText().toString();
+
                 int wp = MainActivity.this.getWindow().getDecorView().getWidth();
                 int hp = MainActivity.this.getWindow().getDecorView().getHeight();
-                DisplayMetrics dm = new DisplayMetrics();
-                getWindowManager().getDefaultDisplay().getMetrics(dm);
-                int w = (int)((wp/dm.xdpi) * 25.4 * 8);
-                int h = (int)((hp/dm.ydpi) * 25.4 * 8);
-                float ws = (float)wp/w;
-                float hs = (float)hp/h;
 
                 setContentView(R.layout.drawterm_main);
+
+                WindowManager wm = (WindowManager)MainActivity.this.getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
+                if (wm != null) {
+                    Display d = wm.getDefaultDisplay();
+                    Point p = new Point();
+                    d.getSize(p);
+                    wp = p.x;
+                    hp = p.y;
+                    Resources res = MainActivity.this.getResources();
+                    int rid = res.getIdentifier("navigation_bar_height", "dimen", "android");
+                    if (rid > 0) {
+                        hp -= res.getDimensionPixelSize(rid);
+                    }
+                    LinearLayout ll = findViewById(R.id.mouseButtons);
+                    hp -= ll.getHeight();
+                }
+
+                DisplayMetrics dm = new DisplayMetrics();
+                getWindowManager().getDefaultDisplay().getMetrics(dm);
+                int w = (int)(wp * (160.0/dm.xdpi));
+                int h = (int)(hp * (160.0/dm.ydpi));
+                float ws = (float)wp/w;
+                float hs = (float)hp/h;
+                // only scale up
+                if (ws < 1) {
+                    ws = 1;
+                    w = wp;
+                }
+                if (hs < 1) {
+                    hs = 1;
+                    h = hp;
+                }
+
                 MySurfaceView mView = new MySurfaceView(MainActivity.this, w, h, ws, hs);
                 LinearLayout l = MainActivity.this.findViewById(R.id.dlayout);
                 l.addView(mView, 1, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));

@@ -12,7 +12,8 @@
         android:layout_height="14pt"
         android:layout_gravity="bottom"
         android:gravity="center_horizontal"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:id="@+id/mouseButtons">
 
         <CheckBox
             android:id="@+id/mouseLeft"

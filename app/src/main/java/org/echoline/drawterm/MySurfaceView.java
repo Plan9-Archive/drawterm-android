@@ -1,6 +1,5 @@
 package org.echoline.drawterm;
 
-import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -38,6 +37,12 @@ public class MySurfaceView extends SurfaceView {
         mainActivity.setWidthScale(ws);
         mainActivity.setHeightScale(hs);
         setWillNotDraw(false);
+
+        Listener listener = new Listener();
+        listener.onPrimaryClipChanged();
+        ClipboardManager cm = (ClipboardManager)mainActivity.getApplicationContext().getSystemService(Context.CLIPBOARD_SERVICE);
+        if (cm != null)
+            cm.addPrimaryClipChangedListener(listener);
 
         setOnTouchListener(new View.OnTouchListener() {
             private int[] mouse = new int[3];
@@ -81,42 +86,35 @@ public class MySurfaceView extends SurfaceView {
 
             @Override
             public void run() {
-                try {
-                    while (true) {
-                        try {
-                            if ((SystemClock.currentThreadTimeMillis() - last) > ms) {
-                                mainActivity.runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        MySurfaceView.this.invalidate();
-                                        if ((SystemClock.currentThreadTimeMillis() - lastcb) > 1000) {
-                                            String s = new String(mainActivity.getSnarf());
-                                            ClipboardManager cm = (ClipboardManager)mainActivity.getApplicationContext().getSystemService(Context.CLIPBOARD_SERVICE);
-                                            if (cm != null) {
-                                                String t = cm.getPrimaryClip().getItemAt(0).coerceToText(mainActivity.getApplicationContext()).toString();
-                                                if (!t.equals(s)) {
-                                                    ClipData cd = ClipData.newPlainText(null, s);
-                                                    cm.setPrimaryClip(cd);
-                                                }
-                                            }
-                                            lastcb = SystemClock.currentThreadTimeMillis();
-                                        }
-                                    }
-                                });
-                                last = SystemClock.currentThreadTimeMillis();
-                            }
-                            Thread.sleep(1);
-                        } catch (Exception e) {
-                            throw e;
+                while (true) {
+                    try {
+                        if ((SystemClock.currentThreadTimeMillis() - last) > ms) {
+                            mainActivity.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    MySurfaceView.this.invalidate();
+                                }
+                            });
+                            last = SystemClock.currentThreadTimeMillis();
                         }
+                        if ((SystemClock.currentThreadTimeMillis() - lastcb) > 1000) {
+                            String s = mainActivity.getSnarf();
+                            ClipboardManager cm = (ClipboardManager)mainActivity.getApplicationContext().getSystemService(Context.CLIPBOARD_SERVICE);
+                            if (cm != null) {
+                                String t = cm.getPrimaryClip().getItemAt(0).coerceToText(mainActivity.getApplicationContext()).toString();
+                                if (!t.equals(s)) {
+                                    ClipData cd = ClipData.newPlainText(null, s);
+                                    cm.setPrimaryClip(cd);
+                                }
+                            }
+                            lastcb = SystemClock.currentThreadTimeMillis();
+                        }
+                        Thread.sleep(1);
+                    } catch (Exception e) {
                     }
-                } catch (Exception e) {
                 }
             }
         }).start();
-        ClipboardManager cm = (ClipboardManager)mainActivity.getApplicationContext().getSystemService(Context.CLIPBOARD_SERVICE);
-        if (cm != null)
-            cm.addPrimaryClipChangedListener(new Listener());
     }
 
     @Override
@@ -136,8 +134,11 @@ public class MySurfaceView extends SurfaceView {
     protected class Listener implements ClipboardManager.OnPrimaryClipChangedListener {
         public void onPrimaryClipChanged() {
             ClipboardManager cm = (ClipboardManager)mainActivity.getApplicationContext().getSystemService(Context.CLIPBOARD_SERVICE);
-            if (cm != null)
-                mainActivity.setSnarf((String)(cm.getPrimaryClip().getItemAt(0).coerceToText(mainActivity.getApplicationContext()).toString()));
+            if (cm != null) {
+                ClipData cd = cm.getPrimaryClip();
+                if (cd != null)
+                    mainActivity.setSnarf((String) (cd.getItemAt(0).coerceToText(mainActivity.getApplicationContext()).toString()));
+            }
         }
     }
 }
