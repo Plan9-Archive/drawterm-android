@@ -83,12 +83,11 @@ public class MySurfaceView extends SurfaceView {
         new Thread(new Runnable() {
             private long last = 0;
             private long lastcb = 0;
-            private long ms = 15;
 
             @Override
             public void run() {
                 while (true) {
-                    if ((SystemClock.currentThreadTimeMillis() - last) > ms) {
+                    if ((SystemClock.currentThreadTimeMillis() - last) > 15) {
                         mainActivity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -97,7 +96,7 @@ public class MySurfaceView extends SurfaceView {
                         });
                         last = SystemClock.currentThreadTimeMillis();
                     }
-                    if ((SystemClock.currentThreadTimeMillis() - lastcb) > 1000) {
+                    if ((SystemClock.currentThreadTimeMillis() - lastcb) > 1500) {
                         String s = mainActivity.getSnarf();
                         ClipboardManager cm = (ClipboardManager)mainActivity.getApplicationContext().getSystemService(Context.CLIPBOARD_SERVICE);
                         if (cm != null) {
@@ -113,7 +112,7 @@ public class MySurfaceView extends SurfaceView {
                         lastcb = SystemClock.currentThreadTimeMillis();
                     }
                     try {
-                        Thread.sleep(1);
+                        Thread.sleep(15);
                     } catch(Exception e) {
                     }
                 }
